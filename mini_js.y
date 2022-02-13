@@ -21,13 +21,24 @@ void yyerror( const char* );
 %}
 
 // Tokens
-%token	 ID DOUBLE STRING BOOL IF WHILE FOR EMPTY_OBJ EMPTY_ARRAY
+%token ID INT DOUBLE STRING BOOL IF WHILE FOR EMPTY_OBJ EMPTY_ARRAY TYPE
 
 %%
 
 CMDs : A { cout << endl; } CMDs   
      |  // Vazio, epsilon
      ;
+     
+CMD_IF : IF '(' E ')' {  }
+     
+F : ID
+  | NUM
+  | DOUBLE
+  | (E)
+  | STRING
+  | BOOL
+  | E[E]
+  ;
 
 %%
 

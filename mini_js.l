@@ -24,16 +24,25 @@ WS      [ \n\r\t]
 " "  { coluna++; }
 "\n" { linha++; coluna = 1; }
 
-"\n"/{WS}*({ID}|{NUM}){WS}* { linha++; coluna = 1;
-                              if( ultimo_token != ';' ) {
-                                ultimo_token = ';';
-                                return ';';
-                              } 
-                            }
-
+"\n"/{WS}({DOUBLE}|{STRING}|{INT}|{ID}|{BOOL}) {
+						  if( ultimo_token == ID 
+						   || ultimo_token == DOUBLE 
+						   || ultimo_token == STRING 
+						   || ultimo_token == INT 
+						   || ultimo_token == BOOL 
+						   || ultimo_token == ')' 
+						   || ultimo_token == ']' ) {
+						    return token( ';' );
+						  }
+						 }
+{INT}    { return token(INT); }
 {DOUBLE} { return token( DOUBLE ); }
 {STRING} { return token( STRING ); }
 {BOOL}   { return token( STRING ); }
+      
+"let"   { return token( TYPE ); }
+"var"   { return token( TYPE ); }
+"const" { return token( TYPE ); }
       
 "if"    { return token( IF ); }
 "while" { return token( WHILE ); }
@@ -42,9 +51,9 @@ WS      [ \n\r\t]
 "{}" { return token( EMPTY_OBJ ); }
 "[]" { return token( EMPTY_ARRAY); }
                                    
- {ID} { return token( ID ); }
+{ID} { return token( ID ); }
       
- . { return token( yytext[0] ); }
+. { return token( yytext[0] ); }
 
 %%
 
