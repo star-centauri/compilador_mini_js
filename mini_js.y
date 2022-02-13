@@ -1,5 +1,6 @@
  %{
 #include <iostream>
+#include <vector>
 #include <string>
 #include <map>
 
@@ -9,20 +10,18 @@ struct Atributos {
   string v;
 };
 
-// Tipo dos atributos: YYSTYPE é o tipo usado para os atributos.
 #define YYSTYPE Atributos
 
 void erro( string msg );
 void print( string st );
 
-// protótipo para o analisador léxico (gerado pelo lex)
 int yylex();
 void yyerror( const char* );
 
 %}
 
 // Tokens
-// %token	 ID NUM PRINT STRING
+%token	 ID DOUBLE STRING BOOL IF WHILE FOR EMPTY_OBJ EMPTY_ARRAY
 
 %%
 

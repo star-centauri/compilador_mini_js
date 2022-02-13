@@ -1,1 +1,17 @@
 AQUI FICA MEUS RASCUNHOS DA GRAMATICA DO MINI JS
+- Em JS temos o termos LET, CONST e VAR
+- Comandos estruturados: if, while, for
+
+Para variaveis:
+LVALUE -> id
+LVALUEPROP -> E [ E ]
+LVALUEPROP -> E . id
+
+E -> LVALUE = E 	    
+  | LVALUEPROP = E 	
+  | ...
+  | LVALUE
+  | LVALUEPROP
+  
+  Testar fazer:
+  let a = {};
