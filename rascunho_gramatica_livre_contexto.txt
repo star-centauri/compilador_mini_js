@@ -15,3 +15,11 @@ E -> LVALUE = E
   
   Testar fazer:
   let a = {};
+  
+------------------------------------------------------------------
+GRAMATICA VARIAVEIS SIMPLES
+S -> "let" E "=" F | "const" E "=" F | "var" E "=" F . { $$.c = $2.c + "@" + $2.c + $4.c + "=" + "^" }
+     
+E -> ID | ID.ID | ID[STRING] | ID[DOUBLE] .
+
+F -> ID | NUM | DOUBLE | STRING | BOOL | [] | {} | E | (E) .
