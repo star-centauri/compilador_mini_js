@@ -1,0 +1,4 @@
+c = 1;
+d = 'Hello';
+a.campo = c;
+b[9] = "Teste"

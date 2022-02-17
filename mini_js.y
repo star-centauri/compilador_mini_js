@@ -20,25 +20,42 @@ void yyerror( const char* );
 
 %}
 
+%right '='
+
 // Tokens
-%token ID INT DOUBLE STRING BOOL IF WHILE FOR EMPTY_OBJ EMPTY_ARRAY TYPE
+%token ID INT DOUBLE STRING BOOL IF WHILE FOR EMPTY_OBJ EMPTY_ARRAY LET VAR CONST
+
+%start S
 
 %%
 
-CMDs : A { cout << endl; } CMDs   
-     |  // Vazio, epsilon
+S : CMDs { cout << $1.v << endl << "." << endl; }
+  ;
+
+CMDs : CMD CMDs { $$.v = $1.v + $2.v; }
+     | CMD
      ;
      
-CMD_IF : IF '(' E ')' {  }
-     
-F : ID
-  | NUM
-  | DOUBLE
-  | (E)
-  | STRING
-  | BOOL
-  | E[E]
-  ;
+CMD : CMD_LVALUE '=' CMD_RVALUE ';'      { $$.v = $1.v + " " + $3.v + " " + "= ^ "; }
+    | CMD_LVALUE '=' CMD_RVALUE          { $$.v = $1.v + " " + $3.v + " " + "= ^ "; }
+    | CMD_LVALUE_PROP '=' CMD_RVALUE ';' { $$.v = $1.v + " " + $3.v + " " + "[=] ^ "; }
+    | CMD_LVALUE_PROP '=' CMD_RVALUE     { $$.v = $1.v + " " + $3.v + " " + "[=] ^ "; }
+    ;
+    
+CMD_LVALUE : ID { $$.v = $1.v; };
+
+CMD_LVALUE_PROP : ID '.' ID         { $$.v = $1.v + "@" + " " + $3.v; }
+		 | ID '[' STRING ']' { $$.v = $1.v + "@" + " " + $3.v; }
+		 | ID '[' INT ']'    { $$.v = $1.v + "@" + " " + $3.v; }
+		 | ID '[' DOUBLE ']' { $$.v = $1.v + "@" + " " + $3.v; }
+		 ;
+
+CMD_RVALUE : ID { $$.v = $1.v + "@"; }
+           | INT
+           | DOUBLE
+           | STRING
+           | BOOL
+           ;
 
 %%
 

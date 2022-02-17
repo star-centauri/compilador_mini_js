@@ -10,7 +10,7 @@ int token( int );
 
 D  	[0-9]
 L   	[A-Za-z_]
-INT	{D}+
+INT     {D}+
 DOUBLE  {D}+"."{D}+([Ee][+\-]?{D}+)?
 ID      {L}({L}|{D})*
 CHAR 	"'"[^'\\]|(\\"n"|\\"t"|\\\\)"'"
@@ -24,25 +24,14 @@ WS      [ \n\r\t]
 " "  { coluna++; }
 "\n" { linha++; coluna = 1; }
 
-"\n"/{WS}({DOUBLE}|{STRING}|{INT}|{ID}|{BOOL}) {
-						  if( ultimo_token == ID 
-						   || ultimo_token == DOUBLE 
-						   || ultimo_token == STRING 
-						   || ultimo_token == INT 
-						   || ultimo_token == BOOL 
-						   || ultimo_token == ')' 
-						   || ultimo_token == ']' ) {
-						    return token( ';' );
-						  }
-						 }
-{INT}    { return token(INT); }
+{INT}    { return token( INT ); }
 {DOUBLE} { return token( DOUBLE ); }
 {STRING} { return token( STRING ); }
 {BOOL}   { return token( STRING ); }
       
-"let"   { return token( TYPE ); }
-"var"   { return token( TYPE ); }
-"const" { return token( TYPE ); }
+"let"   { return token( LET ); }
+"var"   { return token( VAR ); }
+"const" { return token( CONST ); }
       
 "if"    { return token( IF ); }
 "while" { return token( WHILE ); }

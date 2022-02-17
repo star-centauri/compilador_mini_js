@@ -16,10 +16,41 @@ E -> LVALUE = E
   Testar fazer:
   let a = {};
   
+  
+  
+  
+  CMDs : A { cout << endl; } CMDs   
+     |  // Vazio, epsilon
+     ;
+     
+CMD_IF : IF '(' E ')' {  }
+     
+F : ID
+  | DOUBLE
+  | (E)
+  | STRING
+  | BOOL
+  | E[E]
+  ;
+  
 ------------------------------------------------------------------
 GRAMATICA VARIAVEIS SIMPLES
 S -> "let" E "=" F | "const" E "=" F | "var" E "=" F . { $$.c = $2.c + "@" + $2.c + $4.c + "=" + "^" }
      
 E -> ID | ID.ID | ID[STRING] | ID[DOUBLE] .
 
-F -> ID | NUM | DOUBLE | STRING | BOOL | [] | {} | E | (E) .
+F -> ID | NUM | DOUBLE | STRING | BOOL | [] | {} | E | (E) 
+
+
+
+------------------------------------------------------------------------
+"\n"/{WS}({DOUBLE}|{STRING}|{ID}|{BOOL}) {
+						  if( ultimo_token == ID 
+						   || ultimo_token == DOUBLE 
+						   || ultimo_token == STRING
+						   || ultimo_token == BOOL 
+						   || ultimo_token == ')' 
+						   || ultimo_token == ']' ) {
+						    return token( ';' );
+						  }
+						 }.
