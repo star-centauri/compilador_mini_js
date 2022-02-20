@@ -21,10 +21,14 @@ void yyerror( const char* );
 %}
 
 %right '='
+%nonassoc '<' '>' MAIOR_IGUAL MENOR_IGUAL 
+%nonassoc EGUAL NOT_EGUAL
+%nonassoc AND OR
 %left '(' ')'
 %left '+' '-'
-%left '*' '/'
+%left '*' '/' '%'
 %nonassoc UMINUS
+%right '^'
 
 
 // Tokens
@@ -46,7 +50,9 @@ CMDs : CMD CMDs { $$.v = $1.v + $2.v; }
 CMD : CMD_DECLARACAO '=' CMD_RVALUE CMD_TERMINO      { $$.v = $1.v + " " + $3.v + " " + "= ^ "; }
     | CMD_DECLARACAO CMD_TERMINO { $$.v = $1.v; }
     | CMD_DECLARACAO_PROP '=' CMD_RVALUE CMD_TERMINO { $$.v = $1.v + " " + $3.v + " " + "[=] ^ "; }
-    | CMD_FOR { $$.v = $1.v }
+    | CMD_FOR { $$.v = $1.v; }
+    | CMD_IF { $$.v = $1.v; }
+    | CMD_WHILE { $$.v = $1.v; }
     ;
     
 CMD_DECLARACAO : VAR CMD_LVALUE   { $$.v = $2.v; }
@@ -73,10 +79,20 @@ CMD_LVALUE_PROP : ID '.' ID         { $$.v = $1.v + "@" + " " + $3.v; }
 
 
 CMD_RVALUE : ID { $$.v = $1.v + "@"; }
+           | CMD_RVALUE '^' CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
+           | CMD_RVALUE '<' CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
+           | CMD_RVALUE EGUAL CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
+           | CMD_RVALUE NOT_EGUAL CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
+           | CMD_RVALUE MENOR_IGUAL CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
+           | CMD_RVALUE MAIOR_IGUAL CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
+           | CMD_RVALUE AND CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
+           | CMD_RVALUE OR CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
+           | CMD_RVALUE '*' CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
            | CMD_RVALUE '+' CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
            | CMD_RVALUE '-' CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
-           | CMD_RVALUE '*' CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
            | CMD_RVALUE '/' CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
+           | CMD_RVALUE '>' CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
+           | CMD_RVALUE '%' CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
            | INT
            | DOUBLE
            | STRING
@@ -88,6 +104,10 @@ CMD_RVALUE : ID { $$.v = $1.v + "@"; }
            ;
            
 CMD_FOR : FOR '(' CMD ';' CMD_RVALUE ';' CMD_RVALUE ')' '{' CMD '}';
+
+CMD_IF : IF '(' CMD_RVALUE ')' '{' CMD '}' ;
+           
+CMD_WHILE : WHILE '(' CMD_RVALUE ')' '{' CMD ')' ;
            
 CMD_TERMINO : ';' 
             | '\n'
