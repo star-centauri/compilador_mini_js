@@ -46,6 +46,7 @@ CMDs : CMD CMDs { $$.v = $1.v + $2.v; }
 CMD : CMD_DECLARACAO '=' CMD_RVALUE CMD_TERMINO      { $$.v = $1.v + " " + $3.v + " " + "= ^ "; }
     | CMD_DECLARACAO CMD_TERMINO { $$.v = $1.v; }
     | CMD_DECLARACAO_PROP '=' CMD_RVALUE CMD_TERMINO { $$.v = $1.v + " " + $3.v + " " + "[=] ^ "; }
+    | CMD_FOR { $$.v = $1.v }
     ;
     
 CMD_DECLARACAO : VAR CMD_LVALUE   { $$.v = $2.v; }
@@ -85,6 +86,8 @@ CMD_RVALUE : ID { $$.v = $1.v + "@"; }
            | EMPTY_ARRAY
            | '(' CMD_RVALUE ')'
            ;
+           
+CMD_FOR : FOR '(' CMD ';' CMD_RVALUE ';' CMD_RVALUE ')' '{' CMD '}';
            
 CMD_TERMINO : ';' 
             | '\n'
