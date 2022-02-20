@@ -24,6 +24,9 @@ WS      [ \n\r\t]
 " "  { coluna++; }
 "\n" { linha++; coluna = 1; }
 
+\/\*([^*]|\*[^/])*\*\/			;
+\/\/[^\n]*				;
+
 {INT}    { return token( INT ); }
 {DOUBLE} { return token( DOUBLE ); }
 {STRING} { return token( STRING ); }
@@ -39,6 +42,12 @@ WS      [ \n\r\t]
       
 "{}" { return token( EMPTY_OBJ ); }
 "[]" { return token( EMPTY_ARRAY); }
+"||" { return token( OR ); }
+"&&" { return token( AND ); }
+"==" { return token( EGUAL ); }
+"!=" { return token( NOT_EGUAL ); }
+">=" { return token( MAIOR_IGUAL ); }
+"<=" { return token( MENOR_IGUAL ); }
                                    
 {ID} { return token( ID ); }
       
