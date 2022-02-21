@@ -1,4 +1,3 @@
-let a = 1, b, x;
-x = b = a*8*1.1;
-let c = "hello ";
-c = c + ", " + 'world' + '!';
+let a = {}, b = [], c = 9;
+let __9 = 1.1;
+let _ = "abc";

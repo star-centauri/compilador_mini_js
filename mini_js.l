@@ -67,7 +67,7 @@ WS      [ \n\r\t]
 
 int token( int tk ) { 
   coluna += strlen(yytext);
-  yylval.v = yytext;
+  yylval.v = auxiliar + yytext;
   ultimo_token = tk;
   
   return tk;

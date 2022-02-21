@@ -1,26 +1,33 @@
  %{
+#include <string>
+#include <stdio.h>
+#include <stdlib.h>
 #include <iostream>
 #include <vector>
-#include <string>
 #include <map>
 
 using namespace std;
 
 struct Atributos {
-  string v;
-  vector<string> c;
+  vector<string> v;
 };
 
 #define YYSTYPE Atributos
 
 void erro( string msg );
-void print( string st );
+void print( vector<string> codigo );
+
 vector<string> concatena( vector<string> a, vector<string> b );
+vector<string> operator+( vector<string> a, vector<string> b );
+vector<string> operator+( vector<string> a, string b );
+
 string gera_label( string prefixo );
 vector<string> resolve_enderecos( vector<string> entrada );
 
 int yylex();
 void yyerror( const char* );
+
+vector<string> auxiliar;
 
 %}
 
@@ -43,14 +50,11 @@ void yyerror( const char* );
 
 %%
 
-S : CMDs { cout << $1.v + " " + "." << endl; }
+S : CMDs { print( resolve_enderecos($1.v) ); }
   ;
 
-CMDs : CMD ';' CMDs { 
-                   $$.v = $1.v + $3.v; 
-                   $$.c = concatena( $1.c, $3.c );
-                }
-     | { $$.v = ""; }
+CMDs : CMD ';' CMDs { $$.v = $1.v + $3.v; }
+     | { $$.v = auxiliar; }
      ;
      
 CMD : CMD_DECLARACOES {$$.v = $1.v; }
@@ -59,39 +63,39 @@ CMD : CMD_DECLARACOES {$$.v = $1.v; }
     | CMD_WHILE { $$.v = $1.v; }
     ;
     
-CMD_DECLARACOES : CMD_ATRIB { $$.v = $1.v + " ^ "; }
+CMD_DECLARACOES : CMD_ATRIB { $$.v = $1.v + "^"; }
                 | LET CMD_MULT_DECLARACAO { $$.v = $2.v; }
                 | VAR CMD_MULT_DECLARACAO { $$.v = $2.v; }
                 | CONST CMD_MULT_DECLARACAO { $$.v = $2.v; }
                 ; 
                 
-CMD_MULT_DECLARACAO : CMD_DECLARACAO ',' CMD_MULT_DECLARACAO { $$.v = $1.v + " " + $3.v; }
+CMD_MULT_DECLARACAO : CMD_DECLARACAO ',' CMD_MULT_DECLARACAO { $$.v = $1.v + $3.v; }
                     | CMD_DECLARACAO
                     ;
                 
-CMD_DECLARACAO : ID '=' CMD_RVALUE { $$.v = $1.v + "& " + $1.v + " " +  $3.v + " = ^ "; }
-               | ID                { $$.v = $1.v + "& "; }
+CMD_DECLARACAO : ID '=' CMD_RVALUE { $$.v = $1.v + "&" + $1.v + $3.v + "=" + "^"; }
+               | ID                { $$.v = $1.v + "&"; }
                ;
 
-CMD_ATRIB : ID '=' CMD_ATRIB { $$.v = $1.v + " " + $3.v + " = "; }
+CMD_ATRIB : ID '=' CMD_ATRIB { $$.v = $1.v + $3.v + "="; }
           | CMD_RVALUE
           ;
 
 CMD_RVALUE : ID { $$.v = $1.v + "@"; }
-           | CMD_RVALUE '^' CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
-           | CMD_RVALUE '<' CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
-           | CMD_RVALUE EGUAL CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
-           | CMD_RVALUE NOT_EGUAL CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
-           | CMD_RVALUE MENOR_IGUAL CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
-           | CMD_RVALUE MAIOR_IGUAL CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
-           | CMD_RVALUE AND CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
-           | CMD_RVALUE OR CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
-           | CMD_RVALUE '*' CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
-           | CMD_RVALUE '+' CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
-           | CMD_RVALUE '-' CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
-           | CMD_RVALUE '/' CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
-           | CMD_RVALUE '>' CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
-           | CMD_RVALUE '%' CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
+           | CMD_RVALUE '^' CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
+           | CMD_RVALUE '<' CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
+           | CMD_RVALUE EGUAL CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
+           | CMD_RVALUE NOT_EGUAL CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
+           | CMD_RVALUE MENOR_IGUAL CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
+           | CMD_RVALUE MAIOR_IGUAL CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
+           | CMD_RVALUE AND CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
+           | CMD_RVALUE OR CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
+           | CMD_RVALUE '*' CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
+           | CMD_RVALUE '+' CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
+           | CMD_RVALUE '-' CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
+           | CMD_RVALUE '/' CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
+           | CMD_RVALUE '>' CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
+           | CMD_RVALUE '%' CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
            | INT 
            | DOUBLE 
            | STRING 
@@ -107,7 +111,7 @@ CMD_FOR : FOR '(' CMD ';' CMD_RVALUE ';' CMD_RVALUE ')' '{' CMD '}';
 CMD_IF : IF '(' CMD_RVALUE ')' '{' CMD '}' ;
            
 CMD_WHILE : WHILE '(' CMD_RVALUE ')' '{' CMD '}' {
-					             $$.v = $3.v + " ! " + gera_label("end_while") +                                                         " ? " + $6.v + gera_label(":end_while");
+					             $$.v = $3.v + "!" + gera_label("end_while") +                                                         "?" + $6.v + gera_label(":end_while");
                                                  }
           ;
            
@@ -116,8 +120,16 @@ CMD_WHILE : WHILE '(' CMD_RVALUE ')' '{' CMD '}' {
 #include "lex.yy.c"
 
 vector<string> concatena( vector<string> a, vector<string> b ) {
-  for( i = 0; i < b.size(); i++ )
-    a.push_back( b[i] );
+  a.insert( a.end(), b.begin(), b.end() );
+  return a;
+}
+
+vector<string> operator+( vector<string> a, vector<string> b ) {
+  return concatena( a, b );
+}
+
+vector<string> operator+( vector<string> a, string b ) {
+  a.push_back( b );
   return a;
 }
 
@@ -144,12 +156,16 @@ vector<string> resolve_enderecos( vector<string> entrada ) {
 
 void yyerror( const char* msg ) {
   cout << endl << "Erro: " << msg << endl
-       << "Perto de : '" << yylval.v << "'" <<endl;
+       << "Perto de : " <<endl;
   exit( 0 );
 }
 
-void print( string st ) {
-  cout << st << " ";
+void print( vector<string> codigo ) {
+  for (int i = 0; i < codigo.size(); i++) {
+    cout << codigo[i] << " ";
+  } 
+  
+  cout << "." << endl;
 }
 
 int main() {
