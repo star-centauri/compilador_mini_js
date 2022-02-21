@@ -58,8 +58,8 @@ WS      [ \n\r\t]
 "!=" { return token( NOT_EGUAL ); }
 ">=" { return token( MAIOR_IGUAL ); }
 "<=" { return token( MENOR_IGUAL ); }
-"{"  { return token( A_CHAVE ); }
-"}"  { return token( F_CHAVE ); }
+"+=" { return token( MAIOR_EGUAL ); }
+"-=" { return token( MENOR_EGUAL ); }
                                    
 {ID} { return token( ID ); }
       

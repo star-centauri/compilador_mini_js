@@ -32,6 +32,8 @@ vector<string> auxiliar;
 %}
 
 %right '='
+%right MAIOR_EGUAL
+%right MENOR_EGUAL
 %left OR
 %left AND 
 %nonassoc '<' '>' EGUAL NOT_EGUAL MAIOR_IGUAL MENOR_IGUAL 
@@ -44,8 +46,7 @@ vector<string> auxiliar;
 // Tokens
 %token ID INT DOUBLE STRING BOOL EMPTY_OBJ EMPTY_ARRAY 
 %token IF ELSE WHILE FOR LET VAR CONST
-%token OR AND EGUAL NOT_EGUAL MAIOR_IGUAL MENOR_IGUAL
-%token A_CHAVE F_CHAVE
+%token OR AND EGUAL NOT_EGUAL MAIOR_IGUAL MENOR_IGUAL MAIOR_EGUAL MENOR_EGUAL
 
 %start S
 
@@ -55,6 +56,7 @@ S : CMDs { print( resolve_enderecos($1.v) ); }
   ;
 
 CMDs : CMD ';' CMDs { $$.v = $1.v + $3.v; }
+     | CMD CMDs { $$.v = $1.v + $2.v; }
      | { $$.v = auxiliar; }
      ;
      
@@ -65,6 +67,7 @@ CMD : CMD_DECLARACOES {$$.v = $1.v; }
     ;
     
 CMD_DECLARACOES : CMD_ATRIB { $$.v = $1.v + "^"; }
+                | CMD_ATRIB_2 { $$.v = $1.v + "=" + "^"; }
                 | LET CMD_MULT_DECLARACAO { $$.v = $2.v; }
                 | VAR CMD_MULT_DECLARACAO { $$.v = $2.v; }
                 | CONST CMD_MULT_DECLARACAO { $$.v = $2.v; }
@@ -79,10 +82,24 @@ CMD_DECLARACAO : ID '=' CMD_RVALUE { $$.v = $1.v + "&" + $1.v + $3.v + "=" + "^"
                ;
 
 CMD_ATRIB : ID '=' CMD_ATRIB { $$.v = $1.v + $3.v + "="; }
+          | CMD_LVALUE_PROP '=' CMD_RVALUE { $$.v = $1.v + $3.v + "[=]"; }
           | CMD_RVALUE
           ;
+          
+CMD_ATRIB_2 : ID MAIOR_EGUAL CMD_RVALUE { $$.v = $1.v + $1.v + "@" + $3.v; }
+            ;
+            
+CMD_LVALUE_PROP : ID '.' ID         { $$.v = $1.v + "@" + $3.v; }
+		 | ID '[' STRING ']' { $$.v = $1.v + "@" + $3.v; }
+		 | ID '[' INT ']'    { $$.v = $1.v + "@" + $3.v; }
+		 | ID '[' DOUBLE ']' { $$.v = $1.v + "@" + $3.v; }
+		 ;
 
 CMD_RVALUE : ID { $$.v = $1.v + "@"; }
+           | ID '.' ID         { $$.v = $1.v + "@" + $3.v + "[@]"; }
+           | ID '[' STRING ']' { $$.v = $1.v + "@" + $3.v + "[@]"; }
+           | ID '[' INT ']'    { $$.v = $1.v + "@" + $3.v + "[@]"; }
+           | ID '[' DOUBLE ']' { $$.v = $1.v + "@" + $3.v + "[@]"; }
            | CMD_RVALUE '^' CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
            | CMD_RVALUE '<' CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
            | CMD_RVALUE EGUAL CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
@@ -132,7 +149,7 @@ CMD_WHILE : WHILE '(' CMD_RVALUE ')' CMD_CONDICAO {
           ;
           
 CMD_CONDICAO : CMD
-             | '{' CMD F_CHAVE '}' { $$.v = $2.v; }
+             | '{' CMD '}' { $$.v = $2.v; }
              | '{' '}' { $$.v = auxiliar; }
              ;
            
