@@ -62,6 +62,8 @@ WS      [ \n\r\t]
 "-=" { return token( MENOS_EGUAL ); }
 "*=" { return token( VEZES_EGUAL ); }
 "/=" { return token( DIVISAO_EGUAL ); }
+"++" { return token( MAIS_MAIS ); }
+"--" { return token( MENOS_MENOS ); }
                                    
 {ID} { return token( ID ); }
       
