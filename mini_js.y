@@ -31,6 +31,8 @@ vector<string> auxiliar;
 
 %}
 
+%nonassoc IFX
+%nonassoc ELSE 
 %right '='
 %right MAIS_EGUAL MENOS_EGUAL
 %left OR
@@ -136,7 +138,7 @@ CMD_RVALUE : ID { $$.v = $1.v + "@"; }
            
 CMD_FOR : FOR '(' CMD ';' CMD_RVALUE ';' CMD_RVALUE ')' CMD;
 
-CMD_IF : IF '(' CMD_RVALUE ')' CMD { 
+CMD_IF : IF '(' CMD_RVALUE ')' CMD %prec IFX { 
                                               string endif = gera_label("end_if");
                                               $$.v = $3.v + "!" + endif + "?" + 
                                                      $5.v + (":" + endif); 
