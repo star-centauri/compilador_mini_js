@@ -43,8 +43,9 @@ vector<string> auxiliar;
 
 // Tokens
 %token ID INT DOUBLE STRING BOOL EMPTY_OBJ EMPTY_ARRAY 
-%token IF WHILE FOR LET VAR CONST
+%token IF ELSE WHILE FOR LET VAR CONST
 %token OR AND EGUAL NOT_EGUAL MAIOR_IGUAL MENOR_IGUAL
+%token A_CHAVE F_CHAVE
 
 %start S
 
@@ -108,12 +109,32 @@ CMD_RVALUE : ID { $$.v = $1.v + "@"; }
            
 CMD_FOR : FOR '(' CMD ';' CMD_RVALUE ';' CMD_RVALUE ')' '{' CMD '}';
 
-CMD_IF : IF '(' CMD_RVALUE ')' '{' CMD '}' ;
+CMD_IF : IF '(' CMD_RVALUE ')' CMD_CONDICAO { 
+                                              string endif = gera_label("end_if");
+                                              $$.v = $3.v + "!" + endif + "?" + 
+                                                     $5.v + (":" + endif); 
+                                            }
+       | IF '(' CMD_RVALUE ')' CMD_CONDICAO ELSE CMD_CONDICAO {
+       						          string then = gera_label("then");
+       						          string endif = gera_label("end_if");
+       						          $$.v = $3.v + then + "?" 
+       						                 + $7.v + endif + "#" 
+       						                 + (":" + then)
+       						                 + $5.v + (":" + endif); 
+                                                              }
+       ;
            
-CMD_WHILE : WHILE '(' CMD_RVALUE ')' '{' CMD '}' {
-					             $$.v = $3.v + "!" + gera_label("end_while") +                                                         "?" + $6.v + gera_label(":end_while");
-                                                 }
+CMD_WHILE : WHILE '(' CMD_RVALUE ')' CMD_CONDICAO {
+                                                    string endwhile = gera_label("end_while");
+					             $$.v = $3.v + "!" + endwhile 
+					             + "?" + $5.v + (":" + endwhile);
+                                                  }
           ;
+          
+CMD_CONDICAO : CMD
+             | '{' CMD F_CHAVE '}' { $$.v = $2.v; }
+             | '{' '}' { $$.v = auxiliar; }
+             ;
            
 %%
 
@@ -155,9 +176,9 @@ vector<string> resolve_enderecos( vector<string> entrada ) {
 }
 
 void yyerror( const char* msg ) {
-  cout << endl << "Erro: " << msg << endl
-       << "Perto de : " <<endl;
-  exit( 0 );
+   puts( msg ); 
+   printf( "Proximo a: %s\n", yytext );
+   exit( 1 );
 }
 
 void print( vector<string> codigo ) {

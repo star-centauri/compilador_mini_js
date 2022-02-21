@@ -25,7 +25,6 @@ WS      [ \n\r\t]
 " "  { coluna++; }
 "\n" { linha++; coluna = 1; }
 
-
 "\n"/{WS}({DOUBLE}|{STRING}|{ID}|{BOOL}|{INT}) {
 				            if( ultimo_token == ID 
 				              || ultimo_token == DOUBLE 
@@ -47,6 +46,7 @@ WS      [ \n\r\t]
 "const" { return token( CONST ); }
       
 "if"    { return token( IF ); }
+"else"  { return token( ELSE ); }
 "while" { return token( WHILE ); }
 "for"   { return token( FOR ); }	
       
@@ -58,6 +58,8 @@ WS      [ \n\r\t]
 "!=" { return token( NOT_EGUAL ); }
 ">=" { return token( MAIOR_IGUAL ); }
 "<=" { return token( MENOR_IGUAL ); }
+"{"  { return token( A_CHAVE ); }
+"}"  { return token( F_CHAVE ); }
                                    
 {ID} { return token( ID ); }
       
