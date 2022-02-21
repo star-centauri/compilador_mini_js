@@ -68,8 +68,8 @@ CMD : CMD_DECLARACOES {$$.v = $1.v; }
     ;
     
 CMD_LIST : CMD
-         | CMD_LIST CMD { $$.v = $1.v + $2.v }
-         | CMD_LIST ';' CMD { $$.v = $1.v + $3.v }
+         | CMD_LIST CMD { $$.v = $1.v + $2.v; }
+         | CMD_LIST ';' CMD { $$.v = $1.v + $3.v; }
 	 ;
     
 CMD_DECLARACOES : CMD_ATRIB { $$.v = $1.v + "^"; }
@@ -112,7 +112,7 @@ CMD_RVALUE : ID { $$.v = $1.v + "@"; }
            | CMD_RVALUE NOT_EGUAL CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
            | CMD_RVALUE MENOR_IGUAL CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
            | CMD_RVALUE MAIOR_IGUAL CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
-	   | '!' CMD_RVALUE                    { $$.v = "!" + $2.v; }
+	   | '!' CMD_RVALUE                    { $$.v = "!" + $2.v; } // DANDO ERROR
            | CMD_RVALUE AND CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
            | CMD_RVALUE OR CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
            | ID MAIS_MAIS             { $$.v = $1.v + "@" + "1" + $2.v; }
