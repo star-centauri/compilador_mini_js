@@ -63,7 +63,7 @@ CMD_DECLARACOES : CMD_ATRIB
                 | LET CMD_MULT_DECLARACAO { $$.v = $2.v; }
                 ; 
                 
-CMD_MULT_DECLARACAO : CMD_DECLARACAO ',' CMD_DECLARACAO { $$.v = $1.v + " " + $3.v; }
+CMD_MULT_DECLARACAO : CMD_DECLARACAO ',' CMD_MULT_DECLARACAO { $$.v = $1.v + " " + $3.v; }
                     | CMD_DECLARACAO
                     ;
                 
@@ -89,12 +89,12 @@ CMD_RVALUE : ID { $$.v = $1.v + "@"; }
            | CMD_RVALUE '/' CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
            | CMD_RVALUE '>' CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
            | CMD_RVALUE '%' CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
-           | INT { $$.v = $1.v; }
-           | DOUBLE { $$.v = $1.v; }
-           | STRING { $$.v = $1.v; }
-           | BOOL { $$.v = $1.v; }
+           | INT 
+           | DOUBLE 
+           | STRING 
+           | BOOL 
            | '-' CMD_RVALUE %prec UMINUS { $$.v = $1.v + $2.v; }
-           | EMPTY_OBJ 
+           | EMPTY_OBJ
            | EMPTY_ARRAY
            | '(' CMD_RVALUE ')' { $$.v = $2.v; }
            ;
