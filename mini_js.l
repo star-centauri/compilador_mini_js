@@ -60,6 +60,8 @@ WS      [ \n\r\t]
 "<=" { return token( MENOR_IGUAL ); }
 "+=" { return token( MAIS_EGUAL ); }
 "-=" { return token( MENOS_EGUAL ); }
+"*=" { return token( VEZES_EGUAL ); }
+"/=" { return token( DIVISAO_EGUAL ); }
                                    
 {ID} { return token( ID ); }
       
