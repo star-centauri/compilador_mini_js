@@ -45,7 +45,8 @@ vector<string> auxiliar;
 // Tokens
 %token ID INT DOUBLE STRING BOOL EMPTY_OBJ EMPTY_ARRAY 
 %token IF ELSE WHILE FOR LET VAR CONST
-%token OR AND EGUAL NOT_EGUAL MAIOR_IGUAL MENOR_IGUAL MAIOR_EGUAL MENOR_EGUAL
+%token MAIS_EGUAL MENOS_EGUAL VEZES_EGUAL DIVISAO_EGUAL
+%token OR AND EGUAL NOT_EGUAL MAIOR_IGUAL MENOR_IGUAL
 
 %start S
 
@@ -72,7 +73,7 @@ CMD_LIST : CMD
 	 ;
     
 CMD_DECLARACOES : CMD_ATRIB { $$.v = $1.v + "^"; }
-                | CMD_ATRIB_2 { $$.v = $1.v + "=" + "^"; }
+                | CMD_ATRIB_2 { $$.v = $1.v + "^"; }
                 | LET CMD_MULT_DECLARACAO { $$.v = $2.v; }
                 | VAR CMD_MULT_DECLARACAO { $$.v = $2.v; }
                 | CONST CMD_MULT_DECLARACAO { $$.v = $2.v; }
@@ -91,7 +92,7 @@ CMD_ATRIB : ID '=' CMD_ATRIB { $$.v = $1.v + $3.v + "="; }
           | CMD_RVALUE
           ;
           
-CMD_ATRIB_2 : ID MAIOR_EGUAL CMD_RVALUE { $$.v = $1.v + $1.v + "@" + $3.v; }
+CMD_ATRIB_2 : ID MAIS_EGUAL CMD_RVALUE { $$.v = $1.v + $1.v + "@" + $3.v + "="; }
             ;
             
 CMD_LVALUE_PROP : ID '.' ID         { $$.v = $1.v + "@" + $3.v; }
@@ -114,8 +115,8 @@ CMD_RVALUE : ID { $$.v = $1.v + "@"; }
 	   | '!' CMD_RVALUE                    { $$.v = "!" + $2.v; }
            | CMD_RVALUE AND CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
            | CMD_RVALUE OR CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
-           | ID MAIS_MAIS             { $$.v = $1.v + "@" + "1" + $2.v;  }
-           | ID MENOS_MENOS           { $$.v = $1.v + $3.v + $2.v; }
+           | ID MAIS_MAIS             { $$.v = $1.v + "@" + "1" + $2.v; }
+           | ID MENOS_MENOS           { $$.v = $1.v + "@" + "1" + $2.v; }           
            | CMD_RVALUE '*' CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
            | CMD_RVALUE '+' CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
            | CMD_RVALUE '-' CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
