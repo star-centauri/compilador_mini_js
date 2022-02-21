@@ -63,7 +63,13 @@ CMD : CMD_DECLARACOES {$$.v = $1.v; }
     | CMD_FOR { $$.v = $1.v; }
     | CMD_IF { $$.v = $1.v; }
     | CMD_WHILE { $$.v = $1.v; }
+    | '{' CMD_LIST '}' { $$.v = $2.v; }
     ;
+    
+CMD_LIST : CMD
+         | CMD_LIST CMD { $$.v = $1.v + $2.v }
+         | CMD_LIST ';' CMD { $$.v = $1.v + $3.v }
+	 ;
     
 CMD_DECLARACOES : CMD_ATRIB { $$.v = $1.v + "^"; }
                 | CMD_ATRIB_2 { $$.v = $1.v + "=" + "^"; }
@@ -126,14 +132,14 @@ CMD_RVALUE : ID { $$.v = $1.v + "@"; }
            | '(' CMD_RVALUE ')' { $$.v = $2.v; }
            ;
            
-CMD_FOR : FOR '(' CMD ';' CMD_RVALUE ';' CMD_RVALUE ')' '{' CMD '}';
+CMD_FOR : FOR '(' CMD ';' CMD_RVALUE ';' CMD_RVALUE ')' CMD;
 
-CMD_IF : IF '(' CMD_RVALUE ')' CMD_CONDICAO { 
+CMD_IF : IF '(' CMD_RVALUE ')' CMD { 
                                               string endif = gera_label("end_if");
                                               $$.v = $3.v + "!" + endif + "?" + 
                                                      $5.v + (":" + endif); 
                                             }
-       | IF '(' CMD_RVALUE ')' CMD_CONDICAO ELSE CMD_CONDICAO {
+       | IF '(' CMD_RVALUE ')' CMD ELSE CMD {
        						          string then = gera_label("then");
        						          string endif = gera_label("end_if");
        						          $$.v = $3.v + then + "?" 
@@ -143,17 +149,12 @@ CMD_IF : IF '(' CMD_RVALUE ')' CMD_CONDICAO {
                                                               }
        ;
            
-CMD_WHILE : WHILE '(' CMD_RVALUE ')' CMD_CONDICAO {
+CMD_WHILE : WHILE '(' CMD_RVALUE ')' CMD {
                                                     string endwhile = gera_label("end_while");
 					             $$.v = $3.v + "!" + endwhile 
 					             + "?" + $5.v + (":" + endwhile);
                                                   }
           ;
-          
-CMD_CONDICAO : CMD
-             | '{' CMD '}' { $$.v = $2.v; }
-             | '{' '}' { $$.v = auxiliar; }
-             ;
            
 %%
 
