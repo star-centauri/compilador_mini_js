@@ -59,8 +59,10 @@ CMD : CMD_DECLARACOES {$$.v = $1.v; }
     | CMD_WHILE { $$.v = $1.v; }
     ;
     
-CMD_DECLARACOES : CMD_ATRIB
+CMD_DECLARACOES : CMD_ATRIB { $$.v = $1.v + " ^ "; }
                 | LET CMD_MULT_DECLARACAO { $$.v = $2.v; }
+                | VAR CMD_MULT_DECLARACAO { $$.v = $2.v; }
+                | CONST CMD_MULT_DECLARACAO { $$.v = $2.v; }
                 ; 
                 
 CMD_MULT_DECLARACAO : CMD_DECLARACAO ',' CMD_MULT_DECLARACAO { $$.v = $1.v + " " + $3.v; }
@@ -71,7 +73,8 @@ CMD_DECLARACAO : ID '=' CMD_RVALUE { $$.v = $1.v + "& " + $1.v + " " +  $3.v + "
                | ID                { $$.v = $1.v + "& "; }
                ;
 
-CMD_ATRIB : ID '=' CMD_RVALUE { $$.v = $1.v + " " + $3.v + " = ^ "; }
+CMD_ATRIB : ID '=' CMD_ATRIB { $$.v = $1.v + " " + $3.v + " = "; }
+          | CMD_RVALUE
           ;
 
 CMD_RVALUE : ID { $$.v = $1.v + "@"; }
