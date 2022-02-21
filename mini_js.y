@@ -92,7 +92,8 @@ CMD_ATRIB : ID '=' CMD_ATRIB { $$.v = $1.v + $3.v + "="; }
           | CMD_RVALUE
           ;
           
-CMD_ATRIB_2 : ID MAIS_EGUAL CMD_RVALUE { $$.v = $1.v + $1.v + "@" + $3.v + "="; }
+CMD_ATRIB_2 : ID MAIS_EGUAL CMD_ATRIB_2 { $$.v = $1.v + $1.v + "@" + $3.v + "+" + "="; }
+            | CMD_RVALUE
             ;
             
 CMD_LVALUE_PROP : ID '.' ID         { $$.v = $1.v + "@" + $3.v; }
