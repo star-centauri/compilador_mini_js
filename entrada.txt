@@ -1,7 +1,5 @@
 let a = {};
 let b = [];
 let c, d;
-c = 1;
+c = 1 + 6 * 9;
 d = 'Hello';
-a.campo = c + 1;
-b[9] = a.campo;

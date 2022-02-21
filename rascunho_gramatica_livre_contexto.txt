@@ -55,89 +55,87 @@ F -> ID | NUM | DOUBLE | STRING | BOOL | [] | {} | E | (E)
 						  }
 						 }.
 ---------------------------------------------------------------------------
-S : CMDs { cout << $1.v << endl << "." << endl; }
+
+S : CMDs { cout << $1.v + " " + "." << endl; }
   ;
 
-CMDs : CMD CMDs { $$.v = $1.v + $2.v; }
-     | CMD
+CMDs : CMD ';' CMDs { 
+                   $$.v = $1.v + $3.v; 
+                   $$.c = concatena( $1.c, $3.c );
+                }
+     | { $$.v = ""; }
      ;
      
-CMD : CMD_LVALUE '=' CMD_RVALUE ';'      { $$.v = $1.v + " " + $3.v + " " + "= ^ "; }
-    | CMD_LVALUE '=' CMD_RVALUE          { $$.v = $1.v + " " + $3.v + " " + "= ^ "; }
-    | CMD_LVALUE_PROP '=' CMD_RVALUE ';' { $$.v = $1.v + " " + $3.v + " " + "[=] ^ "; }
-    | CMD_LVALUE_PROP '=' CMD_RVALUE     { $$.v = $1.v + " " + $3.v + " " + "[=] ^ "; }
+CMD : CMD_DECLARACOES {$$.v = $1.v; }
+    | CMD_FOR { $$.v = $1.v; }
+    | CMD_IF { $$.v = $1.v; }
+    | CMD_WHILE { $$.v = $1.v; }
     ;
     
-CMD_LVALUE : ID { $$.v = $1.v; };
+CMD_DECLARACOES : CMD_DECLARACAO '=' CMD_RVALUE  { $$.v = $1.v + " " + 
+                                                               $3.v + " " + "= ^ "; }
+                | CMD_DECLARACAO { $$.v = $1.v; }
+                | CMD_DECLARACAO_PROP '=' CMD_RVALUE { $$.v = $1.v + " " + 
+                                                                   $3.v + " " + "[=] ^ "; }
+                ;
+    
+CMD_DECLARACAO : VAR CMD_LVALUE   { $$.v = $2.v; }
+               | LET CMD_LVALUE   { $$.v = $2.v; }
+               | CONST CMD_LVALUE { $$.v = $2.v; }
+               | CMD_ATRIB { $$.v = $1.v; }
+               ;
+               
+CMD_DECLARACAO_PROP : VAR CMD_LVALUE_PROP   { $$.v = $2.v; }
+                    | LET CMD_LVALUE_PROP   { $$.v = $2.v; }
+                    | CONST CMD_LVALUE_PROP { $$.v = $2.v; }
+                    | CMD_LVALUE_PROP { $$.v = $1.v; }
+                    ; 
 
+CMD_LVALUE : ID {  $$.v = $1.v + "&" + " " + $1.v; }
+           | ID ',' CMD_LVALUE { $$.v = $1.v + "&" + " " + $3.v + "&" + " ";  }
+           ;
+           
+CMD_ATRIB : ID { $$.v = $1.v; } 
+          | CMD_RVALUE
+          ;
+           
 CMD_LVALUE_PROP : ID '.' ID         { $$.v = $1.v + "@" + " " + $3.v; }
 		 | ID '[' STRING ']' { $$.v = $1.v + "@" + " " + $3.v; }
 		 | ID '[' INT ']'    { $$.v = $1.v + "@" + " " + $3.v; }
 		 | ID '[' DOUBLE ']' { $$.v = $1.v + "@" + " " + $3.v; }
 		 ;
 
+
 CMD_RVALUE : ID { $$.v = $1.v + "@"; }
+           | CMD_RVALUE '^' CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
+           | CMD_RVALUE '<' CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
+           | CMD_RVALUE EGUAL CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
+           | CMD_RVALUE NOT_EGUAL CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
+           | CMD_RVALUE MENOR_IGUAL CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
+           | CMD_RVALUE MAIOR_IGUAL CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
+           | CMD_RVALUE AND CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
+           | CMD_RVALUE OR CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
+           | CMD_RVALUE '*' CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
+           | CMD_RVALUE '+' CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
+           | CMD_RVALUE '-' CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
+           | CMD_RVALUE '/' CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
+           | CMD_RVALUE '>' CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
+           | CMD_RVALUE '%' CMD_RVALUE { $$.v = $1.v + " " + $3.v + " " + $2.v; }
            | INT
            | DOUBLE
            | STRING
            | BOOL
-           ;
----------------------------------------------------------------------------------------
-S : CMDs { cout << $1.v << endl << "." << endl; }
-  ;
-
-CMDs : CMD CMDs { $$.v = $1.v + $2.v; }
-     | CMD
-     ;
-     
-CMD : CMD_DECLARACAO CMD_TERMINO { $$.v = $1.v + " " + $2.v + " " + "= ^ "; }
-    | CMD_LVALUE CMD_TERMINO {}
-    | CMD_FOR
-    ;
-    
-CMD_DECLARACAO : VAR CMD_LVALUE   { $$.v = $2.v; }
-               | LET CMD_LVALUE   { $$.v = $2.v; }
-               | CONST CMD_LVALUE { $$.v = $2.v; }
-               |
-               ;
-
-CMD_EXPRESSAO : ID {
-			mkentr(0,indentifier,scope[stop-1]);
-			printf("updating :%s scope:%d\n",indentifier,scope[stop-1]);
-		    };
-		| CMD_OPERACAO;
-
-CMD_LVALUE : ID 
-	   | ID ',' CMD_LVALUE 
-	   | ID '=' CMD_RVALUE 
-	   | ID '=' CMD_RVALUE ',' CMD_LVALUE
-	   ;
-
-CMD_RVALUE : ID { $$.v = $1.v + "@"; }
-           | CMD_RVALUE '+' CMD_RVALUE
-           | CMD_RVALUE '-' CMD_RVALUE
-           | CMD_RVALUE '*' CMD_RVALUE
-           | CMD_RVALUE '/' CMD_RVALUE
-           | CMD_RVALUE OR CMD_RVALUE
-           | CMD_RVALUE AND CMD_RVALUE
-           | CMD_RVALUE EGUAL CMD_RVALUE
-           | CMD_RVALUE NOT_EGUAL CMD_RVALUE
-           | '(' CMD_RVALUE ')'
            | '-' CMD_RVALUE %prec UMINUS
-           | INT
-           | DOUBLE
-           | STRING
-           | BOOL
+           | EMPTY_OBJ 
+           | EMPTY_ARRAY
+           | '(' CMD_RVALUE ')'
            ;
            
-CMD_OPERACAO : '='
-             | 
+CMD_FOR : FOR '(' CMD ';' CMD_RVALUE ';' CMD_RVALUE ')' '{' CMD '}';
+
+CMD_IF : IF '(' CMD_RVALUE ')' '{' CMD '}' ;
            
-CMD_ITENS : CMD_EXPRESSAO ',' CMD_ITENS
-          | CMD_EXPRESSAO;
-           
-CMD_FOR : FOR '(' CMD_DECLARACAO CMD_ITENS ';' CMD_ITENS ';' CMD_ITENS ')' CMD;
-           
-CMD_TERMINO : ';' 
-            | '\n'
-            ;
+CMD_WHILE : WHILE '(' CMD_RVALUE ')' '{' CMD '}' {
+					             $$.v = $3.v + " ! " + gera_label("end_while") +                                                         " ? " + $6.v + gera_label(":end_while");
+                                                 }
+          ;

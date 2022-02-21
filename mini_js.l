@@ -3,6 +3,7 @@
 int linha = 1;
 int coluna = 1;
 int ultimo_token = -1;
+int i = 0;
 
 int token( int );
 
@@ -24,8 +25,17 @@ WS      [ \n\r\t]
 " "  { coluna++; }
 "\n" { linha++; coluna = 1; }
 
-\/\*([^*]|\*[^/])*\*\/			;
-\/\/[^\n]*				;
+
+"\n"/{WS}({DOUBLE}|{STRING}|{ID}|{BOOL}|{INT}) {
+				            if( ultimo_token == ID 
+				              || ultimo_token == DOUBLE 
+					      || ultimo_token == STRING
+					      || ultimo_token == BOOL 
+					      || ultimo_token == ')' 
+					      || ultimo_token == ']' ) {
+					        return token( ';' );
+				            }
+					  }
 
 {INT}    { return token( INT ); }
 {DOUBLE} { return token( DOUBLE ); }
