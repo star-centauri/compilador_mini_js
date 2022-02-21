@@ -33,16 +33,6 @@ F : ID
   | E[E]
   ;
   
-------------------------------------------------------------------
-GRAMATICA VARIAVEIS SIMPLES
-S -> "let" E "=" F | "const" E "=" F | "var" E "=" F . { $$.c = $2.c + "@" + $2.c + $4.c + "=" + "^" }
-     
-E -> ID | ID.ID | ID[STRING] | ID[DOUBLE] .
-
-F -> ID | NUM | DOUBLE | STRING | BOOL | [] | {} | E | (E) 
-
-
-
 ------------------------------------------------------------------------
 "\n"/{WS}({DOUBLE}|{STRING}|{ID}|{BOOL}) {
 						  if( ultimo_token == ID 
@@ -139,3 +129,7 @@ CMD_WHILE : WHILE '(' CMD_RVALUE ')' '{' CMD '}' {
 					             $$.v = $3.v + " ! " + gera_label("end_while") +                                                         " ? " + $6.v + gera_label(":end_while");
                                                  }
           ;
+
+
+
+http://www.inf.ufrgs.br/~johann/comp/lexyacc.pdf
