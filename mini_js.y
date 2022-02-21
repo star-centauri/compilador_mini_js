@@ -32,8 +32,7 @@ vector<string> auxiliar;
 %}
 
 %right '='
-%right MAIOR_EGUAL
-%right MENOR_EGUAL
+%right MAIS_EGUAL MENOS_EGUAL
 %left OR
 %left AND 
 %nonassoc '<' '>' EGUAL NOT_EGUAL MAIOR_IGUAL MENOR_IGUAL 
