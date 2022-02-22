@@ -98,8 +98,8 @@ CMD_ATRIB_2 : ID MAIS_EGUAL CMD_ATRIB_2 { $$.v = $1.v + $1.v + "@" + $3.v + "+" 
             | CMD_RVALUE
             ;
             
-CMD_LVALUE_PROP : CMD_RVALUE '.' ID         { $$.v = $1.v + "@" + $3.v; }
-		        | CMD_RVALUE '[' CMD_RVALUE ']' { $$.v = $1.v + "@" + $3.v; }
+CMD_LVALUE_PROP : CMD_RVALUE '.' ID         { $$.v = $1.v + "@" + $3.v + "[@]"; }
+		        | CMD_RVALUE '[' CMD_RVALUE ']' { $$.v = $1.v + "@" + $3.v + "[@]"; }
 		 //| ID '[' INT ']'    { $$.v = $1.v + "@" + $3.v; }
 		 //| ID '[' DOUBLE ']' { $$.v = $1.v + "@" + $3.v; }
 		        ;
@@ -136,7 +136,12 @@ CMD_RVALUE : ID { $$.v = $1.v + "@"; }
            | CMD_LVALUE_PROP
            ;
            
-CMD_FOR : FOR '(' CMD ';' CMD_RVALUE ';' CMD_RVALUE ')' CMD;
+CMD_FOR : FOR '(' CMD ';' CMD_RVALUE ')' CMD {
+                                                string endfor = gera_label("end_for");
+                                                string thenfor = gera_label("then_for");
+                                                $$.v = $3.v + (":" + thenfor) + $5.v + "!" + endfor
+                                                        + "?" $7.v + "^" + thenfor  + "#" + (":" + endfor);
+                                             }
 
 CMD_IF : IF '(' CMD_RVALUE ')' CMD %prec IFX { 
                                               string endif = gera_label("end_if");
