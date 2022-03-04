@@ -133,3 +133,25 @@ CMD_WHILE : WHILE '(' CMD_RVALUE ')' '{' CMD '}' {
 
 
 http://www.inf.ufrgs.br/~johann/comp/lexyacc.pdf
+
+------------------------------------------------------------------------------------------------------------------
+void define_var( string var ) {
+  if (vars.find( var ) != vars.end()){
+    int var_ln = vars.find( var )->second;
+    string msg = "a variável '" + var + "' já foi declarada na linha " + to_string(var_ln) + ".";
+    erro(msg);
+  }
+  vars[var] = linha;
+}
+void checa_declarado( string var ) {
+  if (vars.find( var ) == vars.end()){
+    string msg = "a variável '" + var + "' não foi declarada.";
+    erro(msg);
+  }
+  vars[var] = linha;
+}
+
+A : LVALUEPROP A { $$.v = $1.v + $2.v + eqq; checa_declarado($1.v[0]); }
+  | R { $$.v = $1.v; } 
+  | ',' A { $$.v = $2.v; checa_declarado($2.v[0]); }
+  ;
