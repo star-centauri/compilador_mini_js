@@ -1,15 +1,21 @@
- %{
+%{
 #include <string>
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
 #include <vector>
 #include <map>
+#include <algorithm>
 
 using namespace std;
 
 struct Atributos {
   vector<string> v;
+};
+
+struct DeclVar {
+  int linha;
+  string tipo;
 };
 
 #define YYSTYPE Atributos
@@ -23,11 +29,15 @@ vector<string> operator+( vector<string> a, string b );
 
 string gera_label( string prefixo );
 vector<string> resolve_enderecos( vector<string> entrada );
+void verifica_se_foi_declarado( );
+void add_variaveis(string variavel, string tipo, int linha);
 
 int yylex();
 void yyerror( const char* );
 
+int linha = 1;
 vector<string> auxiliar;
+vector<map<string, DeclVar>> ts(1);
 
 %}
 
@@ -40,8 +50,8 @@ vector<string> auxiliar;
 %nonassoc '<' '>' EGUAL NOT_EGUAL MAIOR_IGUAL MENOR_IGUAL 
 %left '+' '-'
 %left '*' '/' '%'
-%nonassoc UMINUS
 %right '^'
+%nonassoc UMINUS
 
 
 // Tokens
@@ -54,89 +64,99 @@ vector<string> auxiliar;
 
 %%
 
-S : CMDs { print( resolve_enderecos($1.v) ); }
+S : CMDs { verifica_se_foi_declarado( ); print( resolve_enderecos($1.v) ); }
   ;
 
 CMDs : CMD ';' CMDs { $$.v = $1.v + $3.v; }
-     | CMD CMDs { $$.v = $1.v + $2.v; }
-     | { $$.v = auxiliar; }
+     | CMD CMDs     { $$.v = $1.v + $2.v; }
+     |              { $$.v = auxiliar; }
      ;
      
-CMD : CMD_DECLARACOES {$$.v = $1.v; }
-    | CMD_FOR { $$.v = $1.v; }
-    | CMD_IF { $$.v = $1.v; }
-    | CMD_WHILE { $$.v = $1.v; }
+CMD : CMD_DECLARACOES  { $$.v = $1.v; }
+    | CMD_FOR          { $$.v = $1.v; }
+    | CMD_IF           { $$.v = $1.v; }
+    | CMD_WHILE        { $$.v = $1.v; }
     | '{' CMD_LIST '}' { $$.v = $2.v; }
     ;
     
 CMD_LIST : CMD
-         | CMD_LIST CMD { $$.v = $1.v + $2.v; }
+	 | CMD ';'
+         | CMD_LIST CMD     { $$.v = $1.v + $2.v; }
          | CMD_LIST ';' CMD { $$.v = $1.v + $3.v; }
 	 ;
     
-CMD_DECLARACOES : CMD_ATRIB { $$.v = $1.v + "^"; }
+CMD_DECLARACOES : CMD_ATRIB { $$.v = $1.v + "^"; add_variaveis($1.v[0], "*", linha); }
                 | CMD_ATRIB_2 { $$.v = $1.v + "^"; }
-                | LET CMD_MULT_DECLARACAO { $$.v = $2.v; }
-                | VAR CMD_MULT_DECLARACAO { $$.v = $2.v; }
-                | CONST CMD_MULT_DECLARACAO { $$.v = $2.v; }
+                | LET CMD_MULT_DECLARACAO_LET { $$.v = $2.v; }
+                | VAR CMD_MULT_DECLARACAO_VAR { $$.v = $2.v; }
+                | CONST CMD_MULT_DECLARACAO_CONST { $$.v = $2.v; }
                 ; 
                 
-CMD_MULT_DECLARACAO : CMD_DECLARACAO ',' CMD_MULT_DECLARACAO { $$.v = $1.v + $3.v; }
-                    | CMD_DECLARACAO
-                    ;
-                
+CMD_MULT_DECLARACAO_LET : CMD_DECLARACAO ',' CMD_MULT_DECLARACAO_LET { $$.v = $1.v + $3.v; add_variaveis($1.v[0], "let", linha); }
+                        | CMD_DECLARACAO { $$.v = $1.v; add_variaveis($1.v[0], "let", linha); }
+                        ;
+                        
+CMD_MULT_DECLARACAO_VAR : CMD_DECLARACAO ',' CMD_MULT_DECLARACAO_VAR { $$.v = $1.v + $3.v; }
+                        | CMD_DECLARACAO
+                        ;  
+                        
+CMD_MULT_DECLARACAO_CONST : CMD_DECLARACAO ',' CMD_MULT_DECLARACAO_CONST { $$.v = $1.v + $3.v; }
+                          | CMD_DECLARACAO
+                          ;               
+                          
 CMD_DECLARACAO : ID '=' CMD_RVALUE { $$.v = $1.v + "&" + $1.v + $3.v + "=" + "^"; }
-               | ID                { $$.v = $1.v + "&"; }
+               | ID                { $$.v = $1.v + "&";}
                ;
+                
 
-CMD_ATRIB : ID '=' CMD_ATRIB { $$.v = $1.v + $3.v + "="; }
+CMD_ATRIB : ID '=' CMD_RVALUE { $$.v = $1.v + $3.v + "="; }
           | CMD_LVALUE_PROP '=' CMD_RVALUE { $$.v = $1.v + $3.v + "[=]"; }
-          | CMD_RVALUE
           ;
           
 CMD_ATRIB_2 : ID MAIS_EGUAL CMD_ATRIB_2 { $$.v = $1.v + $1.v + "@" + $3.v + "+" + "="; }
+            | CMD_LVALUE_PROP MAIS_EGUAL CMD_ATRIB_2 { $$.v = $1.v + $1.v + "[@]" + $3.v + "+" + "[=]"; }
             | CMD_RVALUE
             ;
             
-CMD_LVALUE_PROP : ID '.' ID         { $$.v = $1.v + "@" + $3.v; }
-		 | ID '[' STRING ']' { $$.v = $1.v + "@" + $3.v; }
-		 | ID '[' INT ']'    { $$.v = $1.v + "@" + $3.v; }
-		 | ID '[' DOUBLE ']' { $$.v = $1.v + "@" + $3.v; }
-		 ;
+CMD_LVALUE_PROP : CMD_RVALUE '.' ID         { $$.v = $1.v + $3.v; }
+		| CMD_RVALUE '[' CMD_ATRIB ']' { $$.v = $1.v + $3.v; }
+		;
 
 CMD_RVALUE : ID { $$.v = $1.v + "@"; }
-           | ID '.' ID         { $$.v = $1.v + "@" + $3.v + "[@]"; }
-           | ID '[' STRING ']' { $$.v = $1.v + "@" + $3.v + "[@]"; }
-           | ID '[' INT ']'    { $$.v = $1.v + "@" + $3.v + "[@]"; }
-           | ID '[' DOUBLE ']' { $$.v = $1.v + "@" + $3.v + "[@]"; }
            | CMD_RVALUE '^' CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
            | CMD_RVALUE '<' CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
            | CMD_RVALUE EGUAL CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
            | CMD_RVALUE NOT_EGUAL CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
            | CMD_RVALUE MENOR_IGUAL CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
            | CMD_RVALUE MAIOR_IGUAL CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
-	   | '!' CMD_RVALUE                    { $$.v = "!" + $2.v; } // DANDO ERROR
            | CMD_RVALUE AND CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
            | CMD_RVALUE OR CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
-           | ID MAIS_MAIS             { $$.v = $1.v + "@" + "1" + $2.v; }
-           | ID MENOS_MENOS           { $$.v = $1.v + "@" + "1" + $2.v; }           
+           | ID MAIS_MAIS             { $$.v = $1.v + $1.v + "@" + "1" + "+" + "="; }
+           | ID MENOS_MENOS           { $$.v = $1.v + $1.v + "@" + "1" + "-" + "="; }           
            | CMD_RVALUE '*' CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
            | CMD_RVALUE '+' CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
            | CMD_RVALUE '-' CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
            | CMD_RVALUE '/' CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
            | CMD_RVALUE '>' CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
            | CMD_RVALUE '%' CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
-           | INT 
-           | DOUBLE 
-           | STRING 
-           | BOOL 
-           | '-' CMD_RVALUE %prec UMINUS { $$.v = $1.v + $2.v; }
-           | EMPTY_OBJ
-           | EMPTY_ARRAY
+           | INT { $$.v = $1.v; }
+           | DOUBLE { $$.v = $1.v; }
+           | STRING { $$.v = $1.v; }
+           | BOOL { $$.v = $1.v; }
+           | '-' CMD_RVALUE %prec UMINUS { $$.v = auxiliar + "0" + $2.v + $1.v; }
+           | EMPTY_OBJ { $$.v = $1.v;  }
+           | EMPTY_ARRAY { $$.v = $1.v;  }
            | '(' CMD_RVALUE ')' { $$.v = $2.v; }
+           | CMD_LVALUE_PROP { $$.v = $1.v + "[@]"; }
            ;
            
-CMD_FOR : FOR '(' CMD ';' CMD_RVALUE ';' CMD_RVALUE ')' CMD;
+CMD_FOR : FOR '(' CMD ';' CMD_RVALUE ';' CMD ')' CMD {
+                                                string endfor = gera_label("end_for");
+                                                string thenfor = gera_label("then_for");
+                                                $$.v = $3.v + (":" + thenfor) + $5.v + "!" + endfor
+                                                        + "?" + $9.v + "^" + thenfor  + "#" + (":" + endfor);
+                                             }
+        ;
 
 CMD_IF : IF '(' CMD_RVALUE ')' CMD %prec IFX { 
                                               string endif = gera_label("end_if");
@@ -144,20 +164,22 @@ CMD_IF : IF '(' CMD_RVALUE ')' CMD %prec IFX {
                                                      $5.v + (":" + endif); 
                                             }
        | IF '(' CMD_RVALUE ')' CMD ELSE CMD {
-       						          string then = gera_label("then");
-       						          string endif = gera_label("end_if");
-       						          $$.v = $3.v + then + "?" 
-       						                 + $7.v + endif + "#" 
-       						                 + (":" + then)
-       						                 + $5.v + (":" + endif); 
-                                                              }
+					          string then = gera_label("then");
+					          string endif = gera_label("end_if");
+					          $$.v = $3.v + then + "?" 
+					                 + $7.v + endif + "#" 
+					                 + (":" + then)
+					                 + $5.v + (":" + endif); 
+                                            }
        ;
            
 CMD_WHILE : WHILE '(' CMD_RVALUE ')' CMD {
-                                                    string endwhile = gera_label("end_while");
-					             $$.v = $3.v + "!" + endwhile 
-					             + "?" + $5.v + (":" + endwhile);
-                                                  }
+                                            string endwhile = gera_label("end_while");
+                                            string condicao = gera_label("cond_while");
+				             $$.v = auxiliar + condicao + $3.v + "!" + endwhile 
+				             		      + "?" + (":" + condicao) 
+				             		      + "#" + $5.v + (":" + endwhile);
+                                          }
           ;
            
 %%
@@ -199,10 +221,37 @@ vector<string> resolve_enderecos( vector<string> entrada ) {
   return saida;
 }
 
-void yyerror( const char* msg ) {
-   puts( msg ); 
-   printf( "Proximo a: %s\n", yytext );
-   exit( 1 );
+void verifica_se_foi_declarado( ) {
+   bool declarado = true;
+   string var;
+   
+   for (auto i : ts) {
+     for (auto j : i) {
+       //cout << j.first << " " << j.second.linha << j.second.tipo << endl;
+       if ( j.second.tipo == "*" ) {
+          declarado = false;
+          var = j.first;
+       }
+     } 
+   }
+   
+   if( declarado == false ) {
+      string msg = "a variável '" + var + "' não foi declarada.";
+      erro(msg);
+   }
+}
+
+void add_variaveis(string variavel, string tipo, int linha) {
+  struct DeclVar declvar;
+  declvar.linha = linha;
+  declvar.tipo = tipo;
+     
+  ts[ts.size()-1][variavel] = declvar;
+}
+
+void erro( string msg ) {
+  cout << msg << endl;
+  exit( 1 );
 }
 
 void print( vector<string> codigo ) {
@@ -211,6 +260,12 @@ void print( vector<string> codigo ) {
   } 
   
   cout << "." << endl;
+}
+
+void yyerror( const char* msg ) {
+   puts( msg ); 
+   printf( "Proximo a: %s\n", yytext );
+   exit( 1 );
 }
 
 int main() {

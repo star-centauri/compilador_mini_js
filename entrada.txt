@@ -1,2 +1,4 @@
-let c = "hello ";
-c += ", " + 'world' + '!';
+let a = 1, 
+x = '9'
+let b;
+b = 10;

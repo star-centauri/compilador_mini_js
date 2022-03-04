@@ -1,6 +1,5 @@
 %{
 
-int linha = 1;
 int coluna = 1;
 int ultimo_token = -1;
 int i = 0;
