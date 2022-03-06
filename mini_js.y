@@ -30,14 +30,18 @@ vector<string> operator+( vector<string> a, string b );
 string gera_label( string prefixo );
 vector<string> resolve_enderecos( vector<string> entrada );
 void verifica_se_foi_declarado( );
-void add_variaveis(string variavel, string tipo, int linha);
+bool verificar_declaracao( string var );
+void add_variaveis(string variavel, string tipo);
+
+bool verifica_duplicada( string var );
+void verificar_declaracao_duplicada();
 
 int yylex();
 void yyerror( const char* );
 
-int linha = 1;
+int count_aux = 0;
 vector<string> auxiliar;
-vector<map<string, DeclVar>> ts(1);
+vector<multimap<string, DeclVar>> ts(1);
 
 %}
 
@@ -64,7 +68,11 @@ vector<map<string, DeclVar>> ts(1);
 
 %%
 
-S : CMDs { verifica_se_foi_declarado( ); print( resolve_enderecos($1.v) ); }
+S : CMDs {
+            verifica_se_foi_declarado( ); 
+            verificar_declaracao_duplicada(); 
+            print( resolve_enderecos($1.v) ); 
+         }
   ;
 
 CMDs : CMD ';' CMDs { $$.v = $1.v + $3.v; }
@@ -85,15 +93,15 @@ CMD_LIST : CMD
          | CMD_LIST ';' CMD { $$.v = $1.v + $3.v; }
 	 ;
     
-CMD_DECLARACOES : CMD_ATRIB { $$.v = $1.v + "^"; add_variaveis($1.v[0], "*", linha); }
+CMD_DECLARACOES : CMD_ATRIB { $$.v = $1.v + "^"; }
                 | CMD_ATRIB_2 { $$.v = $1.v + "^"; }
                 | LET CMD_MULT_DECLARACAO_LET { $$.v = $2.v; }
                 | VAR CMD_MULT_DECLARACAO_VAR { $$.v = $2.v; }
                 | CONST CMD_MULT_DECLARACAO_CONST { $$.v = $2.v; }
                 ; 
                 
-CMD_MULT_DECLARACAO_LET : CMD_DECLARACAO ',' CMD_MULT_DECLARACAO_LET { $$.v = $1.v + $3.v; add_variaveis($1.v[0], "let", linha); }
-                        | CMD_DECLARACAO { $$.v = $1.v; add_variaveis($1.v[0], "let", linha); }
+CMD_MULT_DECLARACAO_LET : CMD_DECLARACAO ',' CMD_MULT_DECLARACAO_LET { $$.v = $1.v + $3.v; add_variaveis($1.v[0], "let"); }
+                        | CMD_DECLARACAO { $$.v = $1.v; add_variaveis($1.v[0], "let"); }
                         ;
                         
 CMD_MULT_DECLARACAO_VAR : CMD_DECLARACAO ',' CMD_MULT_DECLARACAO_VAR { $$.v = $1.v + $3.v; }
@@ -109,7 +117,7 @@ CMD_DECLARACAO : ID '=' CMD_RVALUE { $$.v = $1.v + "&" + $1.v + $3.v + "=" + "^"
                ;
                 
 
-CMD_ATRIB : ID '=' CMD_RVALUE { $$.v = $1.v + $3.v + "="; }
+CMD_ATRIB : ID '=' CMD_RVALUE { $$.v = $1.v + $3.v + "="; add_variaveis($1.v[0], "*"); }
           | CMD_LVALUE_PROP '=' CMD_RVALUE { $$.v = $1.v + $3.v + "[=]"; }
           ;
           
@@ -120,6 +128,7 @@ CMD_ATRIB_2 : ID MAIS_EGUAL CMD_ATRIB_2 { $$.v = $1.v + $1.v + "@" + $3.v + "+" 
             
 CMD_LVALUE_PROP : CMD_RVALUE '.' ID         { $$.v = $1.v + $3.v; }
 		| CMD_RVALUE '[' CMD_ATRIB ']' { $$.v = $1.v + $3.v; }
+		| CMD_RVALUE '[' CMD_RVALUE ']' { $$.v = $1.v + $3.v; }
 		;
 
 CMD_RVALUE : ID { $$.v = $1.v + "@"; }
@@ -139,13 +148,13 @@ CMD_RVALUE : ID { $$.v = $1.v + "@"; }
            | CMD_RVALUE '/' CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
            | CMD_RVALUE '>' CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
            | CMD_RVALUE '%' CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
-           | INT { $$.v = $1.v; }
-           | DOUBLE { $$.v = $1.v; }
-           | STRING { $$.v = $1.v; }
-           | BOOL { $$.v = $1.v; }
+           | INT 
+           | DOUBLE
+           | STRING
+           | BOOL
            | '-' CMD_RVALUE %prec UMINUS { $$.v = auxiliar + "0" + $2.v + $1.v; }
-           | EMPTY_OBJ { $$.v = $1.v;  }
-           | EMPTY_ARRAY { $$.v = $1.v;  }
+           | EMPTY_OBJ
+           | EMPTY_ARRAY
            | '(' CMD_RVALUE ')' { $$.v = $2.v; }
            | CMD_LVALUE_PROP { $$.v = $1.v + "[@]"; }
            ;
@@ -221,32 +230,85 @@ vector<string> resolve_enderecos( vector<string> entrada ) {
   return saida;
 }
 
+bool verificar_declaracao( string var ) {
+   for (auto i : ts) {
+     for (auto j : i) {
+       if ( j.first == var && j.second.tipo == "let") {
+          return true;  
+       }
+       
+       if ( j.first == var && j.second.tipo == "var") {
+          return true;  
+       }
+       
+       if ( j.first == var && j.second.tipo == "const") {
+          return true;  
+       }
+     } 
+   }
+   
+   return false;
+}
+
 void verifica_se_foi_declarado( ) {
    bool declarado = true;
-   string var;
    
    for (auto i : ts) {
      for (auto j : i) {
        //cout << j.first << " " << j.second.linha << j.second.tipo << endl;
        if ( j.second.tipo == "*" ) {
-          declarado = false;
-          var = j.first;
+          declarado = verificar_declaracao( j.first );
+          
+          if (declarado == false) {
+             string msg = "a variável '" + j.first + "' não foi declarada.";
+      	     erro(msg);
+          }
+       }
+     } 
+   }
+}
+
+void add_variaveis(string variavel, string tipo) {
+  multimap<string, DeclVar> decl;
+  count_aux = linha;
+  //cout << linha << variavel << endl;
+  
+  struct DeclVar declvar;
+  declvar.linha = count_aux;
+  declvar.tipo = tipo;
+  
+  decl.insert(pair<string, DeclVar>(variavel, declvar));
+  ts.push_back(decl);
+}
+
+bool verifica_duplicada( string var ) {
+   int count = 0;
+   
+   for (auto i : ts) {
+     for (auto j : i) {
+       if ( j.first == var && j.second.tipo == "let") {
+          count++;
        }
      } 
    }
    
-   if( declarado == false ) {
-      string msg = "a variável '" + var + "' não foi declarada.";
-      erro(msg);
-   }
+   if (count > 1) return true;
+   else return false;
 }
 
-void add_variaveis(string variavel, string tipo, int linha) {
-  struct DeclVar declvar;
-  declvar.linha = linha;
-  declvar.tipo = tipo;
-     
-  ts[ts.size()-1][variavel] = declvar;
+void verificar_declaracao_duplicada() {
+   bool duplicado = false;
+   
+   for (auto i : ts) {
+     for (auto j : i) {
+       //cout << j.first << " " << j.second.linha << j.second.tipo << endl;
+       duplicado = verifica_duplicada( j.first );   
+       if ( duplicado ) {
+         string msg = "a variável '" + j.first + "' já foi declarada na linha " + to_string(j.second.linha) + ".";
+      	 erro(msg);
+       }
+     } 
+   }
 }
 
 void erro( string msg ) {
