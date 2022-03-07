@@ -15,6 +15,7 @@ struct Atributos {
 
 struct DeclVar {
   int linha;
+  int bloco;
   string tipo;
 };
 
@@ -40,6 +41,7 @@ int yylex();
 void yyerror( const char* );
 
 int count_aux = 0;
+int bloco = 1;
 vector<string> auxiliar;
 vector<multimap<string, DeclVar>> ts(1);
 
@@ -75,8 +77,7 @@ S : CMDs {
          }
   ;
 
-CMDs : CMD ';' CMDs { $$.v = $1.v + $3.v; }
-     | CMD CMDs     { $$.v = $1.v + $2.v; }
+CMDs : CMD CMDs     { $$.v = $1.v + $2.v; }
      |              { $$.v = auxiliar; }
      ;
      
@@ -84,7 +85,7 @@ CMD : CMD_DECLARACOES  { $$.v = $1.v; }
     | CMD_FOR          { $$.v = $1.v; }
     | CMD_IF           { $$.v = $1.v; }
     | CMD_WHILE        { $$.v = $1.v; }
-    | '{' CMD_LIST '}' { $$.v = $2.v; }
+    | '{' CMD_LIST '}' { $$.v = $2.v; bloco++; }
     ;
     
 CMD_LIST : CMD
@@ -276,6 +277,7 @@ void add_variaveis(string variavel, string tipo) {
   struct DeclVar declvar;
   declvar.linha = count_aux;
   declvar.tipo = tipo;
+  declvar.bloco = bloco;
   
   decl.insert(pair<string, DeclVar>(variavel, declvar));
   ts.push_back(decl);
