@@ -28,6 +28,8 @@ vector<string> concatena( vector<string> a, vector<string> b );
 vector<string> operator+( vector<string> a, vector<string> b );
 vector<string> operator+( vector<string> a, string b );
 
+extern void le_de_novo( int );
+
 string gera_label( string prefixo );
 vector<string> resolve_enderecos( vector<string> entrada );
 void verifica_se_foi_declarado( );
@@ -47,24 +49,22 @@ vector<multimap<string, DeclVar>> ts(1);
 
 %}
 
+// Tokens
+%token ID INT DOUBLE STRING BOOL OR AND EGUAL NOT_EGUAL MAIOR_IGUAL MENOR_IGUAL LET VAR CONST IF WHILE FOR 
+%token MAIS_EGUAL ELSE MENOS_EGUAL VEZES_EGUAL DIVISAO_EGUAL MAIS_MAIS MENOS_MENOS EMPTY_OBJ EMPTY_ARRAY
+
 %nonassoc IFX
 %nonassoc ELSE 
-%right '='
-%right MAIS_EGUAL MENOS_EGUAL
+%right '=' MAIS_EGUAL MENOS_EGUAL
 %left OR
 %left AND 
 %nonassoc '<' '>' EGUAL NOT_EGUAL MAIOR_IGUAL MENOR_IGUAL 
 %left '+' '-'
 %left '*' '/' '%'
+%left '!'
+%left '.'
 %right '^'
 %nonassoc UMINUS
-
-
-// Tokens
-%token ID INT DOUBLE STRING BOOL EMPTY_OBJ EMPTY_ARRAY 
-%token IF ELSE WHILE FOR LET VAR CONST
-%token MAIS_EGUAL MENOS_EGUAL VEZES_EGUAL DIVISAO_EGUAL
-%token OR AND EGUAL NOT_EGUAL MAIOR_IGUAL MENOR_IGUAL MAIS_MAIS MENOS_MENOS
 
 %start S
 
@@ -89,9 +89,7 @@ CMD : CMD_DECLARACOES  { $$.v = $1.v; }
     ;
     
 CMD_LIST : CMD
-	 | CMD ';'
          | CMD_LIST CMD     { $$.v = $1.v + $2.v; }
-         | CMD_LIST ';' CMD { $$.v = $1.v + $3.v; }
 	 ;
     
 CMD_DECLARACOES : CMD_ATRIB { $$.v = $1.v + "^"; }
