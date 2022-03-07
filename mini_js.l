@@ -75,7 +75,8 @@ DECL_OBJ {WS}*{ID}{WS}*";"
 "else"  { return token( ELSE ); }
 "while" { return token( WHILE ); }
 "for"   { return token( FOR ); }	
-      
+
+"=>" { return token( SETA ); }
 "{}" { return token( EMPTY_OBJ ); }
 "[]" { return token( EMPTY_ARRAY); }
 "||" { return token( OR ); }
