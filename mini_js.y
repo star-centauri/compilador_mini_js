@@ -51,11 +51,12 @@ vector<multimap<string, DeclVar>> ts(1);
 
 // Tokens
 %token ID INT DOUBLE STRING BOOL OR AND EGUAL NOT_EGUAL MAIOR_IGUAL MENOR_IGUAL LET VAR CONST IF WHILE FOR 
-%token MAIS_EGUAL ELSE MENOS_EGUAL VEZES_EGUAL DIVISAO_EGUAL MAIS_MAIS MENOS_MENOS EMPTY_OBJ EMPTY_ARRAY
+%token SETA MAIS_EGUAL ELSE MENOS_EGUAL VEZES_EGUAL DIVISAO_EGUAL MAIS_MAIS MENOS_MENOS EMPTY_OBJ EMPTY_ARRAY
 
 %nonassoc IFX
 %nonassoc ELSE 
 %right '=' MAIS_EGUAL MENOS_EGUAL
+%right SETA
 %left OR
 %left AND 
 %nonassoc '<' '>' EGUAL NOT_EGUAL MAIOR_IGUAL MENOR_IGUAL 
@@ -131,6 +132,7 @@ CMD_LVALUE_PROP : CMD_RVALUE '.' ID         { $$.v = $1.v + $3.v; }
 		;
 
 CMD_RVALUE : ID { $$.v = $1.v + "@"; }
+           | ID SETA '{' '}'
            | CMD_RVALUE '^' CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
            | CMD_RVALUE '<' CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
            | CMD_RVALUE EGUAL CMD_RVALUE { $$.v = $1.v + $3.v + $2.v; }
