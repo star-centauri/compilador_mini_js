@@ -17,7 +17,21 @@ ID      {L}({L}|{D})*
 CHAR 	"'"[^'\\]|(\\"n"|\\"t"|\\\\)"'"
 STRING  (\"([^\"\n]|(\\\")|\"\")+\")|(\'([^\'\n]|(\\\')|\'\')+\')
 BOOL	"true"|"false"
-WS      [ \n\r\t]
+WS      [ \t\n]*
+
+ARGS {WS}{ID}{WS}(","{WS}{ID}{WS})*")"{WS}"=>"
+ASM "asm{".*"}"
+
+// Para o separador ";"
+SEP_ONE {WS}("let"|"const"|"var")
+SEP_TWO {WS}("else")
+SEP_THREE {WS}({INT}|{DOUBLE}|{STRING}|{ID}|{BOOL}|"}"|"{")
+
+//Bloco vazio
+BLOCO_VAZIO "{"{WS}*"}"
+
+//Declaracao objeto
+DECL_OBJ {WS}*{ID}{WS}*";"
 
 %%
 
@@ -25,16 +39,28 @@ WS      [ \n\r\t]
 " "  { coluna++; }
 "\n" { linha++; coluna = 1; }
 
-"\n"/{WS}({DOUBLE}|{STRING}|{ID}|{BOOL}|{INT}) {
-				            if( ultimo_token == ID 
-				              || ultimo_token == DOUBLE 
-					      || ultimo_token == STRING
-					      || ultimo_token == BOOL 
-					      || ultimo_token == ')' 
-					      || ultimo_token == ']' ) {
-					        return token( ';' );
-				            }
-					  }
+"\n"/{SEP_ONE} {
+		   if( ultimo_token != ';' && ultimo_token != ')' ) {
+		      return token( ';' );
+		   }
+               }
+"\n"/{SEP_TWO} {
+                  if( ultimo_token != ';' && ultimo_token != ')' &&  ultimo_token != BLOCO_VAZIO ) {
+		      return token( ';' );
+		   }
+               }
+"\n"/{SEP_THREE} {
+		    if( ultimo_token == ID 
+		      || ultimo_token == DOUBLE 
+		      || ultimo_token == STRING
+		      || ultimo_token == BOOL 
+		      || ultimo_token == INT 
+		      || ultimo_token == BLOCO_VAZIO 
+		      || ultimo_token == ')' 
+		      || ultimo_token == ']' ) {
+			return token( ';' );
+		    }
+		 }
 
 {INT}    { return token( INT ); }
 {DOUBLE} { return token( DOUBLE ); }
@@ -70,6 +96,10 @@ WS      [ \n\r\t]
 . { return token( yytext[0] ); }
 
 %%
+
+void le_de_novo( int n ) {
+   unput(n);
+}
 
 int token( int tk ) { 
   coluna += strlen(yytext);
